@@ -1,4 +1,4 @@
-# **Token Report Registry Smart Contract**
+# **BaseScam Registry Smart Contract**
 
 A smart contract designed to create a community-driven registry for reporting and assessing tokens on Basechain (a Layer 2 Ethereum network). Users can report suspicious tokens, vote on their safety, and query the status of tokens.
 
