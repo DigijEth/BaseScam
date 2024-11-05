@@ -476,12 +476,6 @@ function voteOnToken(address _tokenAddress, bool _isPositive) external
 
 ---
 
-## **License**
-
-This project is licensed under the MIT License.
-
----
-
 ## **Contact**
 
 For questions or support, please open an issue on the GitHub repository or contact the maintainer.
