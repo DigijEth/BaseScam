@@ -137,7 +137,7 @@ Since the server handles scanning and data fetching, remove or adjust any client
 
 ---
 
-## **Important Considerations**
+## **WIP**
 
 - **Performance:**
 
@@ -154,10 +154,6 @@ Since the server handles scanning and data fetching, remove or adjust any client
 
   - Ensure proper error handling in both the server and client to handle exceptions gracefully.
 
-- **Legal and Ethical Considerations:**
-
-  - Comply with the terms of service of the Basechain network, Token Sniffer API, and CoinGecko API.
-  - Respect user privacy and data protection regulations.
 
 ---
 
@@ -194,7 +190,7 @@ Since the server handles scanning and data fetching, remove or adjust any client
 
 ---
 
-## **Future Enhancements**
+## **Next Update**
 
 - **Holders Count and Liquidity Pool:**
 
@@ -216,20 +212,7 @@ Since the server handles scanning and data fetching, remove or adjust any client
 
 ---
 
-## **Conclusion**
-
-You now have the server-side code for the **BaseScammer DApp** that securely handles API keys, interacts with external APIs, and provides data to the client application.
-
-This setup enhances security by:
-
-- Keeping API keys on the server-side.
-- Handling API requests and data processing on the server.
-- Providing a clean API for the client to consume.
-
-Feel free to customize and extend the application further according to your needs.
-
----
-
-**Note:** As an AI language model developed by OpenAI, I cannot create zip files or provide documents for download. However, you can copy the provided code into your project files accordingly.
-
 If you have any questions or need further assistance, feel free to ask!
+
+Donate to support this project digij.eth digij.base.eth
+
