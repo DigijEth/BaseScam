@@ -749,16 +749,16 @@ const SERVER_URL = 'https://your-server-url.com';
 ```markdown
 ## License
 
-This project is licensed under a **Dual-Use License**.
+This project is licensed under a Dual-Use License.
 
-- **Personal Use**: Free for personal, non-commercial purposes.
-- **Commercial Use**: Requires a commercial license.
+- Personal Use/Education: Free for personal, non-commercial purposes.
+- Commercial Use: Requires a commercial license.
 
 Please see the LICENSE file for the full terms.
 
 For commercial licensing inquiries, please contact:
 
-- **Email**: [fightwithmusicinc@gmail.com]
+- Email: [fightwithmusicinc@gmail.com]
 ```
 
 --
