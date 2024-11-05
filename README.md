@@ -10,8 +10,9 @@
 - A **Decentralized Application (DApp)** for blockchain enthusiasts.
 - A **WordPress Plugin** for integrating the token scanner into WordPress websites.
 
-This is just the beginning. I plan on expanding this to include more features
-such as wallet/contract mapping to trace scammers, top holders 
+This is just a PoC on how we can make base a little safer. I plan on expanding this to include more features
+such as wallet/contract mapping to trace scammers, top holder search, bot detection/manipulation 
+and many more! 
 
 If you would like to contribute please let me know or donate at digij.eth or digij.base.eth
 ---
