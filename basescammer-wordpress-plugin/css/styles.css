@@ -1,0 +1,56 @@
+#basescammer-container {
+    display: flex;
+    height: 500px;
+    border: 1px solid #ddd;
+}
+
+#basescammer-left-panel {
+    width: 30%;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+#basescammer-right-panel {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.basescammer-token-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px;
+    border-bottom: 1px solid #eee;
+}
+
+.basescammer-token-item:hover {
+    background-color: #f9f9f9;
+}
+
+.basescammer-status-icon {
+    margin-right: 10px;
+    font-size: 1.5em;
+}
+
+.basescammer-green-check {
+    color: green;
+}
+
+.basescammer-red-x {
+    color: red;
+}
+
+.basescammer-yellow-question {
+    color: orange;
+}
+
+.basescammer-token-name {
+    flex-grow: 1;
+}
+
+#basescammer-loading {
+    text-align: center;
+    margin-top: 20px;
+}
