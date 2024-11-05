@@ -12,9 +12,10 @@
 
 This is just a PoC on how we can make base a little safer. I plan on expanding this to include more features
 such as wallet/contract mapping to trace scammers, top holder search, bot detection/manipulation 
-and many more! 
+and many more!
 
 If you would like to contribute please let me know or donate at digij.eth or digij.base.eth
+
 ---
 
 ## **Table of Contents**
@@ -744,30 +745,7 @@ const SERVER_URL = 'https://your-server-url.com';
 
 - **Performance:** Adjust the scanning interval in `tokenScanner.js` as needed.
 
-- **Legal and Ethical Considerations:**
-
-  - Ensure compliance with the terms of service of the Basechain network, Token Sniffer API, and CoinGecko API.
-  - Respect user privacy and data protection regulations.
-
----
-
-## **License**
-
-MIT
-
----
-
-# **Conclusion**
-
-With this setup, you have a fully functional BaseScammer application that includes:
-
-- A web application accessible via a browser.
-- A DApp for decentralized interaction.
-- A WordPress plugin for easy integration into WordPress sites.
-
-Feel free to customize and extend the application further according to your needs.
-
----
+--
 
 **Note:** Replace placeholders like `YOUR_TOKEN_SNIFFER_API_KEY` and `https://your-server-url.com` with your actual API key and server URL.
 
