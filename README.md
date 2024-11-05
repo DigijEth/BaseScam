@@ -745,6 +745,22 @@ const SERVER_URL = 'https://your-server-url.com';
 
 - **Performance:** Adjust the scanning interval in `tokenScanner.js` as needed.
 
+
+```markdown
+## License
+
+This project is licensed under a **Dual-Use License**.
+
+- **Personal Use**: Free for personal, non-commercial purposes.
+- **Commercial Use**: Requires a commercial license.
+
+Please see the LICENSE file for the full terms.
+
+For commercial licensing inquiries, please contact:
+
+- **Email**: [fightwithmusicinc@gmail.com]
+```
+
 --
 
 **Note:** Replace placeholders like `YOUR_TOKEN_SNIFFER_API_KEY` and `https://your-server-url.com` with your actual API key and server URL.
