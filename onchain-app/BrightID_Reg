@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+interface IBrightIDVerifier {
+    function isVerified(
+        address addr,
+        string calldata context,
+        uint256 timestamp
+    ) external view returns (bool);
+}
+
+contract TokenReportRegistry {
+    // Reference to BrightID Verifier contract
+    IBrightIDVerifier public brightIDVerifier;
+
+    // The context used in BrightID for our application
+    string public brightIDContext;
+
+    // Timestamp after which verifications are considered valid
+    uint256 public brightIDVerificationTimestamp;
+
+    // Rest of the contract variables and mappings
+    // ...
+
+    // Admin address
+    address public admin;
+
+    // Events
+    event TokenReported(address indexed tokenAddress, address indexed reporter, string reason);
+    event TokenCleared(address indexed tokenAddress);
+    event TokenVerified(address indexed tokenAddress);
+    event TokenVoted(address indexed tokenAddress, address indexed voter, bool vote);
+    event ThresholdsUpdated(uint256 newRiskThreshold, uint256 newSafeThreshold);
+
+    constructor(
+        address _brightIDVerifierAddress,
+        string memory _brightIDContext,
+        uint256 _riskThreshold,
+        uint256 _safeThreshold
+    ) {
+        admin = msg.sender; // Set deployer as admin
+        brightIDVerifier = IBrightIDVerifier(_brightIDVerifierAddress);
+        brightIDContext = _brightIDContext;
+        brightIDVerificationTimestamp = block.timestamp;
+        riskThreshold = _riskThreshold;
+        safeThreshold = _safeThreshold;
+    }
+
+    // Function to report a token
+    function reportToken(address _tokenAddress, string calldata _reason) external onlyVerifiedUser {
+        require(_tokenAddress != address(0), "Invalid token address");
+        require(!hasReported[_tokenAddress][msg.sender], "You have already reported or voted on this token");
+
+        // Record the report
+        // ...
+
+        emit TokenReported(_tokenAddress, msg.sender, _reason);
+    }
+
+    // Function to vote on a token
+    function voteOnToken(address _tokenAddress, bool _isPositive) external onlyVerifiedUser {
+        require(_tokenAddress != address(0), "Invalid token address");
+        require(!hasReported[_tokenAddress][msg.sender], "You have already reported or voted on this token");
+
+        // Update votes
+        // ...
+
+        emit TokenVoted(_tokenAddress, msg.sender, _isPositive);
+    }
+
+    // Modifier to check if sender is a verified BrightID user
+    modifier onlyVerifiedUser() {
+        require(
+            brightIDVerifier.isVerified(
+                msg.sender,
+                brightIDContext,
+                brightIDVerificationTimestamp
+            ),
+            "You are not verified with BrightID for this application"
+        );
+        _;
+    }
+
+    // Admin functions and other contract code
+    // ...
+}
