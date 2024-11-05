@@ -1,0 +1,23 @@
+{
+  "name": "basescammer-server",
+  "version": "1.0.0",
+  "description": "Server for BaseScammer DApp",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "ethers": "^5.7.2",
+    "express": "^4.18.1",
+    "mongoose": "^6.5.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
