@@ -25,7 +25,7 @@ A smart contract designed to create a community-driven registry for reporting an
 
 ## **Introduction**
 
-The Token Report Registry smart contract allows users to:
+The basescam registry smart contract allows users to:
 
 - **Report Suspicious Tokens**: Users can report tokens they believe are fraudulent or risky.
 - **Vote on Tokens**: Users can cast positive or negative votes on tokens.
