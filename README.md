@@ -1,6 +1,6 @@
+Stand alone server instruction are in the /server/ folder.
 
 Cloud version of the **BaseScammer Server**. This will involve:
-Stand alone version in the dapp folder.
 
 - **Deploying the server to a cloud platform** such as **Heroku**, **AWS Elastic Beanstalk**, or **DigitalOcean**.
 - **Configuring environment variables** securely on the cloud platform.
