@@ -1,6 +1,7 @@
-The readme for the Security Token is in the
-in the folder labeled /onchain-app/ The main
-function comes from the Contract and Token 
+The readme for the Security Token is in 
+the labeled /onchain-app/ 
+
+The main function comes from the Contract and Token 
 interactions. While the app provides information
 based on scans, the tokens let users report and make
 comments about tokens, pairs, etc.
