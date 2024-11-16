@@ -1,5 +1,7 @@
-The readme for the Security Token is in the works. The smartcontract and token info is located
-in the folder labeled *onchain
+The readme for the Security Token is in the
+in the folder labeled /onchain-app/ The main
+function comes from the Contract and Token 
+interactions.
 
 ## **Overview**
 
