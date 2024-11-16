@@ -83,7 +83,7 @@ The **BaseScamRegistry** smart contract is designed with the following core comp
 
 #### **1. Clone the Repository**
 ```bash
-git clone https://github.com/your-repo/BaseScamRegistry.git
+git clone https://github.com/digijeth/BaseScamRegistry.git
 cd BaseScamRegistry
 ```
 
