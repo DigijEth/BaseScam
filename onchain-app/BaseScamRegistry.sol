@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "./BSCAMToken.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-interface IERC20Metadata is IERC20 {
-    function owner() external view returns (address);
-}
+import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol"; // Import OpenZeppelin's IERC20Metadata
 
 contract BaseScamRegistry {
     // Struct to hold report details
