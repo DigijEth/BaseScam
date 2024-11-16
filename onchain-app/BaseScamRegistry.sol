@@ -2,6 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "./BSCAMToken.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+interface IERC20Metadata is IERC20 {
+    function owner() external view returns (address);
+}
 
 contract BaseScamRegistry {
     // Struct to hold report details
@@ -10,110 +15,193 @@ contract BaseScamRegistry {
         string reason;
         uint256 timestamp;
         uint256 votes;
+        string ownerResponse;
+        bool escalated;
+    }
+
+    // Struct to hold token owner details
+    struct TokenDetails {
+        bool isVerified;
+        string contactInfo;
+        string web3Page;
+        string contractType; // Token, NFT, etc.
+        int256 reputation; // Token reputation score
+        string auditCertificate; // Link or hash of the audit certificate
+    }
+
+    // Struct for reviews
+    struct Review {
+        address reviewer;
+        string content;
+        uint256 upvotes;
+        uint256 downvotes;
     }
 
     // Mapping from token address to list of reports
     mapping(address => Report[]) public tokenReports;
 
-    // Mapping to check if a reporter has already reported a token
-    mapping(address => mapping(address => bool)) public hasReported;
+    // Mapping from token address to token details
+    mapping(address => TokenDetails) public tokenDetails;
 
-    // Admin address
+    // Mapping to store reviews for tokens
+    mapping(address => Review[]) public tokenReviews;
+
+    // Mapping for dynamic escalation thresholds
+    uint256 public escalationThreshold = 10; // Default value
+    uint256 public activeReports = 0; // Active reports count
+
+    // Mapping for subscription-based access
+    mapping(address => uint256) public premiumAccessExpiry; // Expiry timestamp for premium access
+
+    // Admin and tokens
     address public admin;
-
-    // Instance of BSCAM token contract
     BSCAMToken public bscamToken;
+    IERC20 public usdc;
 
-    // Faucet settings
-    uint256 public constant FAUCET_AMOUNT = 10 * (10 ** 18); // 10 BSCAM tokens
-    mapping(address => uint256) public lastFaucetClaim; // Track last faucet claim per user
-    uint256 public constant FAUCET_COOLDOWN = 1 hours; // 1-hour cooldown for faucet claims
+    // Token pricing
+    uint256 public constant COST_PER_BATCH = 599 * (10 ** 6); // $5.99 in USDC (assuming 6 decimals)
+    uint256 public constant TOKENS_PER_BATCH = 5000 * (10 ** 18); // 5,000 BSCAM tokens (assuming 18 decimals)
+    uint256 public constant SUBSCRIPTION_COST = 999 * (10 ** 6); // $9.99 for premium features
 
     // Voting cost
     uint256 public constant VOTING_COST = 1 * (10 ** 18); // 1 BSCAM token
 
     // Events
     event TokenReported(address indexed tokenAddress, address indexed reporter, string reason);
-    event TokenCleared(address indexed tokenAddress);
-    event VoteCast(address indexed tokenAddress, uint256 reportIndex, address indexed voter);
-    event FaucetClaimed(address indexed user, uint256 amount);
+    event TokenVerified(address indexed tokenAddress, string contactInfo, string web3Page, string contractType);
+    event AuditCertificateUploaded(address indexed tokenAddress, string certificateLink);
+    event SubscriptionPurchased(address indexed user, uint256 expiryTimestamp);
+    event ReviewAdded(address indexed tokenAddress, address reviewer, string content);
+    event TokenEscalated(address indexed tokenAddress, uint256 reportIndex);
 
-    constructor(BSCAMToken _bscamToken) {
-        admin = msg.sender; // Set deployer as admin
-        bscamToken = _bscamToken; // Assign the BSCAM token contract
+    constructor(BSCAMToken _bscamToken, IERC20 _usdc) {
+        admin = msg.sender;
+        bscamToken = _bscamToken;
+        usdc = _usdc;
     }
 
-    // Faucet function to claim tokens
-    function claimFaucet() external {
-        require(
-            block.timestamp - lastFaucetClaim[msg.sender] >= FAUCET_COOLDOWN,
-            "Faucet cooldown active"
-        );
+    // ==============================
+    // Core Enhancements
+    // ==============================
 
-        // Mint BSCAM tokens to the user
-        bscamToken.mint(msg.sender, FAUCET_AMOUNT);
-        lastFaucetClaim[msg.sender] = block.timestamp;
-
-        emit FaucetClaimed(msg.sender, FAUCET_AMOUNT);
-    }
-
-    // Function to report a token
+    // Report a token
     function reportToken(address _tokenAddress, string calldata _reason) external {
-        require(_tokenAddress != address(0), "Invalid token address");
-        require(!hasReported[_tokenAddress][msg.sender], "You have already reported this token");
+        require(bscamToken.balanceOf(msg.sender) >= VOTING_COST, "Insufficient BSCAM tokens");
+        bscamToken.burn(msg.sender, VOTING_COST); // Burn tokens for reporting
 
-        // Record the report
         tokenReports[_tokenAddress].push(Report({
             reporter: msg.sender,
             reason: _reason,
             timestamp: block.timestamp,
-            votes: 0
+            votes: 0,
+            ownerResponse: "",
+            escalated: false
         }));
 
-        hasReported[_tokenAddress][msg.sender] = true;
+        activeReports++;
+        updateEscalationThreshold();
 
         emit TokenReported(_tokenAddress, msg.sender, _reason);
     }
 
-    // Function to vote on a report
-    function voteOnReport(address _tokenAddress, uint256 _reportIndex) external {
+    // Verify ownership and set audit certificate
+    function verifyTokenOwnership(
+        address _tokenAddress,
+        string calldata _contactInfo,
+        string calldata _web3Page,
+        string calldata _contractType,
+        string calldata _auditCertificate
+    ) external {
+        require(tokenDetails[_tokenAddress].isVerified == false, "Token already verified");
+        IERC20Metadata token = IERC20Metadata(_tokenAddress);
+        require(msg.sender == token.owner(), "Not token owner");
+
+        tokenDetails[_tokenAddress] = TokenDetails({
+            isVerified: true,
+            contactInfo: _contactInfo,
+            web3Page: _web3Page,
+            contractType: _contractType,
+            reputation: 0,
+            auditCertificate: _auditCertificate
+        });
+
+        emit TokenVerified(_tokenAddress, _contactInfo, _web3Page, _contractType);
+        emit AuditCertificateUploaded(_tokenAddress, _auditCertificate);
+    }
+
+    // Dynamic escalation rule adjustment
+    function updateEscalationThreshold() public {
+        if (activeReports > 100) escalationThreshold = 20;
+        else if (activeReports > 50) escalationThreshold = 15;
+        else escalationThreshold = 10;
+    }
+
+    // Escalate a report
+    function escalateReport(address _tokenAddress, uint256 _reportIndex) external {
         require(_reportIndex < tokenReports[_tokenAddress].length, "Invalid report index");
+        Report storage report = tokenReports[_tokenAddress][_reportIndex];
+        require(!report.escalated, "Already escalated");
 
-        // Burn 1 BSCAM token from the voter's balance
-        bscamToken.burn(msg.sender, VOTING_COST);
+        report.escalated = true;
 
-        // Increment the vote count for the report
-        tokenReports[_tokenAddress][_reportIndex].votes += 1;
-
-        emit VoteCast(_tokenAddress, _reportIndex, msg.sender);
+        emit TokenEscalated(_tokenAddress, _reportIndex);
     }
 
-    // Function to get the number of reports for a token
-    function getReportCount(address _tokenAddress) external view returns (uint256) {
-        return tokenReports[_tokenAddress].length;
+    // ==============================
+    // User Incentives and Engagement
+    // ==============================
+
+    // Add a review for a token
+    function addReview(address _tokenAddress, string calldata _content) external {
+        require(bscamToken.balanceOf(msg.sender) >= VOTING_COST, "Insufficient BSCAM tokens");
+        bscamToken.burn(msg.sender, VOTING_COST); // Burn tokens for submitting a review
+
+        tokenReviews[_tokenAddress].push(Review({
+            reviewer: msg.sender,
+            content: _content,
+            upvotes: 0,
+            downvotes: 0
+        }));
+
+        emit ReviewAdded(_tokenAddress, msg.sender, _content);
     }
 
-    // Function to get reports for a token
-    function getReports(address _tokenAddress) external view returns (Report[] memory) {
-        return tokenReports[_tokenAddress];
+    // Upvote or downvote a review
+    function voteReview(address _tokenAddress, uint256 _reviewIndex, bool upvote) external {
+        require(_reviewIndex < tokenReviews[_tokenAddress].length, "Invalid review index");
+
+        if (upvote) {
+            tokenReviews[_tokenAddress][_reviewIndex].upvotes++;
+        } else {
+            tokenReviews[_tokenAddress][_reviewIndex].downvotes++;
+        }
     }
 
-    // Admin function to clear reports
-    function clearReports(address _tokenAddress) external onlyAdmin {
-        delete tokenReports[_tokenAddress];
+    // Purchase premium access
+    function purchaseSubscription() external {
+        require(usdc.allowance(msg.sender, address(this)) >= SUBSCRIPTION_COST, "USDC allowance too low");
 
-        emit TokenCleared(_tokenAddress);
+        bool success = usdc.transferFrom(msg.sender, address(this), SUBSCRIPTION_COST);
+        require(success, "USDC transfer failed");
+
+        uint256 newExpiry = block.timestamp + 30 days;
+        premiumAccessExpiry[msg.sender] = newExpiry;
+
+        emit SubscriptionPurchased(msg.sender, newExpiry);
     }
 
-    // Modifier for admin-only functions
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can perform this action");
+    // ==============================
+    // Utility Functions
+    // ==============================
+
+    // Check if user has premium access
+    function hasPremiumAccess(address _user) public view returns (bool) {
+        return premiumAccessExpiry[_user] >= block.timestamp;
+    }
+
+    // Modifier to restrict premium-only features
+    modifier onlyPremium() {
+        require(hasPremiumAccess(msg.sender), "Premium access required");
         _;
-    }
-
-    // Function to transfer admin rights
-    function transferAdmin(address _newAdmin) external onlyAdmin {
-        require(_newAdmin != address(0), "Invalid address");
-        admin = _newAdmin;
     }
 }
