@@ -14,17 +14,27 @@ contract BaseScamRegistry {
         address reporter;
         string reason;
         uint256 timestamp;
-        string ownerResponse; // Optional response from the token owner
+        string ownerResponse;
         bool escalated;
         uint256 votes;
     }
 
-    // Struct to hold token owner details
+    // Struct for user profiles
+    struct UserProfile {
+        string displayName;
+        string bio;
+        string web3Page;
+        uint8 tier; // 0 = Free, 1 = Paid, 2 = Elite
+        int256 reputation; // Reputation score
+    }
+
+    // Struct for token details
     struct TokenDetails {
         string contactInfo;
         string web3Page;
-        string auditCertificate; // Document link or IPFS hash
-        string contractType; // E.g., "Token", "NFT"
+        string auditCertificate;
+        string contractType;
+        bool isVerified;
     }
 
     // Struct for reviews
@@ -33,48 +43,77 @@ contract BaseScamRegistry {
         string content;
         uint256 upvotes;
         uint256 downvotes;
+        bool visible;
+        bool incentivized;
     }
 
-    // Token and admin details
+    // Struct for insurance claims
+    struct InsuranceClaim {
+        address claimant;
+        uint256 amount;
+        string reason;
+        uint256 timestamp;
+        bool approved;
+        bool processed;
+    }
+
+    // Mappings
+    mapping(address => Report[]) public tokenReports;
+    mapping(address => UserProfile) public userProfiles;
+    mapping(address => TokenDetails) public tokenDetails;
+    mapping(address => Review[]) public tokenReviews;
+    mapping(uint256 => InsuranceClaim) public insuranceClaims;
+
+    // Faucet claims
+    mapping(address => uint256) public lastFaucetClaim;
+
+    // Daily vote limits
+    mapping(address => mapping(address => uint256)) public dailyVotes;
+
+    // Admin and pool details
     address public admin;
-    BSCAMToken public bscamToken;
-    IERC20 public usdc;
+    uint256 public insurancePool;
+    uint256 public totalReports;
+    uint256 public totalTokensBurned;
 
-    // Pricing and thresholds
-    uint256 public constant REPORT_COST = 1 * (10 ** 18); // 1 BSCAM
-    uint256 public constant REVIEW_COST = 2 * (10 ** 18); // 2 BSCAM
-    uint256 public constant TOKEN_BATCH_COST = 5.99 * (10 ** 6); // $5.99 in USDC
-    uint256 public constant PREMIUM_COST = 9.99 * (10 ** 6); // $9.99 in USDC
-    uint256 public escalationThreshold = 10; // Initial escalation threshold
-    uint256 public activeReports; // Tracks the number of active reports
+    // Configurations
+    uint256 public constant FAUCET_AMOUNT = 500 * (10 ** 18);
+    uint256 public constant REVIEW_UPVOTE_THRESHOLD = 5;
+    uint256 public constant INSURANCE_CLAIM_COST = 10 * (10 ** 18);
+    uint256 public constant MAX_VOTES_PER_DAY = 3;
+    uint256 public constant MAX_TOKENS_PER_VOTE = 1000 * (10 ** 18);
 
-    // Mappings for data storage
-    mapping(address => Report[]) public tokenReports; // Token reports
-    mapping(address => TokenDetails) public tokenDetails; // Token owner information
-    mapping(address => Review[]) public tokenReviews; // Token reviews
-    mapping(address => uint256) public premiumSubscriptions; // Premium access expiration timestamps
+    // Reputation configuration
+    int256 public constant REPORT_REWARD = 10;
+    int256 public constant VOTE_REWARD = 5;
+    int256 public constant FALSE_REPORT_PENALTY = -20;
+
+    // Insurance claim counter
+    uint256 public insuranceClaimCounter;
 
     // Events
     event ReportSubmitted(address indexed token, address indexed reporter);
-    event ReportVoted(address indexed token, uint256 reportIndex, bool escalated);
-    event ReviewSubmitted(address indexed token, address indexed reviewer);
-    event ReviewVoted(address indexed token, uint256 reviewIndex, bool upvoted);
-    event PremiumPurchased(address indexed user, uint256 expirationTimestamp);
-    event TokensPurchased(address indexed user, uint256 amount);
+    event TokenDetailsUpdated(address indexed token, string contactInfo, string web3Page, string auditCertificate, string contractType);
+    event TokenVerified(address indexed token);
+    event ReviewSubmitted(address indexed token, address indexed reviewer, string content);
+    event ReviewVoted(address indexed token, uint256 reviewIndex, bool upvoted, uint256 totalUpvotes);
+    event ReviewVisibilityUpdated(address indexed token, uint256 reviewIndex, bool visible);
+    event InsuranceClaimSubmitted(address indexed claimant, uint256 claimId, uint256 amount);
+    event InsuranceClaimProcessed(uint256 claimId, bool approved);
+    event AnalyticsUpdated(uint256 totalReports, uint256 totalTokensBurned);
+    event FaucetClaimed(address indexed user, uint256 amount);
 
-    constructor(BSCAMToken _bscamToken, IERC20 _usdc) {
+    constructor() {
         admin = msg.sender;
-        bscamToken = _bscamToken;
-        usdc = _usdc;
+        insuranceClaimCounter = 0;
     }
 
     // ==============================
-    // Reporting and Voting
+    // Reporting
     // ==============================
 
     function submitReport(address _tokenAddress, string calldata _reason) external {
-        require(bscamToken.balanceOf(msg.sender) >= REPORT_COST, "Insufficient BSCAM tokens");
-        require(bscamToken.transferFrom(msg.sender, address(this), REPORT_COST), "Token transfer failed");
+        require(userProfiles[msg.sender].reputation >= 0, "Insufficient reputation");
 
         tokenReports[_tokenAddress].push(
             Report({
@@ -87,32 +126,15 @@ contract BaseScamRegistry {
             })
         );
 
-        activeReports++;
-        updateEscalationThreshold();
+        totalReports++;
+        totalTokensBurned += 1 * (10 ** 18);
 
         emit ReportSubmitted(_tokenAddress, msg.sender);
-    }
-
-    function voteOnReport(address _tokenAddress, uint256 reportIndex) external {
-        require(reportIndex < tokenReports[_tokenAddress].length, "Invalid report index");
-        require(bscamToken.balanceOf(msg.sender) >= REPORT_COST, "Insufficient BSCAM tokens");
-        require(bscamToken.transferFrom(msg.sender, address(this), REPORT_COST), "Token transfer failed");
-
-        Report storage report = tokenReports[_tokenAddress][reportIndex];
-        require(!report.escalated, "Report already escalated");
-
-        report.votes++;
-
-        if (report.votes >= escalationThreshold) {
-            report.escalated = true;
-            activeReports--;
-        }
-
-        emit ReportVoted(_tokenAddress, reportIndex, report.escalated);
+        emit AnalyticsUpdated(totalReports, totalTokensBurned);
     }
 
     // ==============================
-    // Token Owner Details
+    // Token Details
     // ==============================
 
     function updateTokenDetails(
@@ -128,82 +150,103 @@ contract BaseScamRegistry {
             contactInfo: _contactInfo,
             web3Page: _web3Page,
             auditCertificate: _auditCertificate,
-            contractType: _contractType
+            contractType: _contractType,
+            isVerified: false
         });
+
+        emit TokenDetailsUpdated(_tokenAddress, _contactInfo, _web3Page, _auditCertificate, _contractType);
+    }
+
+    function verifyTokenDetails(address _tokenAddress) external onlyAdmin {
+        require(!tokenDetails[_tokenAddress].isVerified, "Token already verified");
+
+        tokenDetails[_tokenAddress].isVerified = true;
+        emit TokenVerified(_tokenAddress);
     }
 
     // ==============================
     // Reviews
     // ==============================
 
-    function submitReview(address _tokenAddress, string calldata _content) external {
-        require(bscamToken.balanceOf(msg.sender) >= REVIEW_COST, "Insufficient BSCAM tokens");
-        require(bscamToken.transferFrom(msg.sender, address(this), REVIEW_COST), "Token transfer failed");
-
+    function submitReview(address _tokenAddress, string calldata _content, bool _incentivized) external {
         tokenReviews[_tokenAddress].push(
             Review({
                 reviewer: msg.sender,
                 content: _content,
                 upvotes: 0,
-                downvotes: 0
+                downvotes: 0,
+                visible: !_incentivized,
+                incentivized: _incentivized
             })
         );
 
-        emit ReviewSubmitted(_tokenAddress, msg.sender);
+        emit ReviewSubmitted(_tokenAddress, msg.sender, _content);
     }
 
     function voteOnReview(address _tokenAddress, uint256 reviewIndex, bool upvote) external {
         require(reviewIndex < tokenReviews[_tokenAddress].length, "Invalid review index");
 
         Review storage review = tokenReviews[_tokenAddress][reviewIndex];
+
         if (upvote) {
             review.upvotes++;
         } else {
             review.downvotes++;
         }
 
-        emit ReviewVoted(_tokenAddress, reviewIndex, upvote);
-    }
-
-    // ==============================
-    // Premium Access and Token Purchases
-    // ==============================
-
-    function purchasePremium() external {
-        require(usdc.transferFrom(msg.sender, address(this), PREMIUM_COST), "USDC transfer failed");
-
-        uint256 currentExpiration = premiumSubscriptions[msg.sender];
-        uint256 newExpiration = block.timestamp > currentExpiration
-            ? block.timestamp + 30 days
-            : currentExpiration + 30 days;
-
-        premiumSubscriptions[msg.sender] = newExpiration;
-
-        emit PremiumPurchased(msg.sender, newExpiration);
-    }
-
-    function purchaseTokens(uint256 amount) external {
-        require(amount % 5000 == 0, "Must purchase in batches of 5,000");
-        uint256 cost = (amount / 5000) * TOKEN_BATCH_COST;
-        require(usdc.transferFrom(msg.sender, address(this), cost), "USDC transfer failed");
-
-        bscamToken.mint(msg.sender, amount);
-
-        emit TokensPurchased(msg.sender, amount);
-    }
-
-    // ==============================
-    // Escalation Threshold
-    // ==============================
-
-    function updateEscalationThreshold() internal {
-        if (activeReports > 100) {
-            escalationThreshold = 20;
-        } else if (activeReports > 50) {
-            escalationThreshold = 15;
-        } else {
-            escalationThreshold = 10;
+        if (review.incentivized && review.upvotes >= REVIEW_UPVOTE_THRESHOLD && !review.visible) {
+            review.visible = true;
+            emit ReviewVisibilityUpdated(_tokenAddress, reviewIndex, true);
         }
+
+        emit ReviewVoted(_tokenAddress, reviewIndex, upvote, review.upvotes);
+    }
+
+    // ==============================
+    // Insurance Pool and Escrow
+    // ==============================
+
+    function submitInsuranceClaim(uint256 amount, string calldata reason) external {
+        require(amount > 0 && amount <= insurancePool, "Invalid claim amount");
+
+        insuranceClaims[insuranceClaimCounter] = InsuranceClaim({
+            claimant: msg.sender,
+            amount: amount,
+            reason: reason,
+            timestamp: block.timestamp,
+            approved: false,
+            processed: false
+        });
+
+        emit InsuranceClaimSubmitted(msg.sender, insuranceClaimCounter, amount);
+        insuranceClaimCounter++;
+    }
+
+    function processInsuranceClaim(uint256 claimId, bool approve) external onlyAdmin {
+        InsuranceClaim storage claim = insuranceClaims[claimId];
+        require(!claim.processed, "Claim already processed");
+
+        claim.processed = true;
+        claim.approved = approve;
+
+        if (approve) {
+            require(insurancePool >= claim.amount, "Insufficient insurance pool");
+            insurancePool -= claim.amount;
+        }
+
+        emit InsuranceClaimProcessed(claimId, approve);
+    }
+
+    // ==============================
+    // Faucet
+    // ==============================
+
+    function claimFaucet() external {
+        require(block.timestamp >= lastFaucetClaim[msg.sender] + 30 days, "Faucet can only be claimed every 30 days");
+
+        lastFaucetClaim[msg.sender] = block.timestamp;
+
+        emit FaucetClaimed(msg.sender, FAUCET_AMOUNT);
     }
 
     // ==============================
