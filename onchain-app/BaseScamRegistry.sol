@@ -49,16 +49,17 @@ contract BaseScamRegistry {
     BSCAMToken public bscamToken;
     IERC20 public usdc;
 
-    // Reputation and voting
+    // Voting, reputation, and reports
     mapping(address => uint256) public reputation;
     mapping(address => uint256) public votesInPeriod;
+    mapping(address => Report[]) public tokenReports;
 
-    // Escalation and risk scoring
-    uint256 public escalationThreshold = 5;
-    mapping(address => uint256) public riskScores;
+    // Blacklist/Whitelist
+    mapping(address => bool) public blacklistedTokens;
+    mapping(address => bool) public whitelistedTokens;
 
-    // Flagged addresses
-    mapping(address => bool) public flaggedAddresses;
+    // Escalated reports
+    mapping(uint256 => bool) public escalatedReports; // Map by report ID
 
     // Referral tracking
     mapping(address => address) public referrals;
@@ -67,6 +68,9 @@ contract BaseScamRegistry {
     // Events
     event AdminAction(address indexed admin, string action, uint256 timestamp);
     event TokenVoted(address indexed voter, address indexed token, uint256 amount);
+    event TokenReported(address indexed token, address indexed reporter, string reason);
+    event TokenBlacklisted(address indexed token);
+    event TokenWhitelisted(address indexed token);
     event FundsAddedToInsurancePool(address indexed from, uint256 amount);
     event FundsClaimedFromInsurancePool(address indexed to, uint256 amount);
     event ReferralRewarded(address indexed referrer, address indexed referee, uint256 amount);
@@ -79,7 +83,65 @@ contract BaseScamRegistry {
     }
 
     // ==============================
-    // Insurance Pool and Contributions
+    // Reporting and Voting
+    // ==============================
+
+    function reportToken(address _tokenAddress, string calldata _reason) external {
+        require(reputation[msg.sender] >= 0, "Low reputation");
+        require(!blacklistedTokens[_tokenAddress], "Token already blacklisted");
+
+        tokenReports[_tokenAddress].push(
+            Report({
+                reporter: msg.sender,
+                reason: _reason,
+                timestamp: block.timestamp,
+                votes: 0,
+                ownerResponse: "",
+                escalated: false,
+                riskScore: 0
+            })
+        );
+
+        emit TokenReported(_tokenAddress, msg.sender, _reason);
+    }
+
+    function voteOnReport(address _tokenAddress, uint256 reportIndex, bool voteFor) external {
+        require(bscamToken.balanceOf(msg.sender) >= 1 * (10 ** 18), "Insufficient BSCAM tokens");
+        require(reportIndex < tokenReports[_tokenAddress].length, "Invalid report");
+
+        Report storage report = tokenReports[_tokenAddress][reportIndex];
+        require(!report.escalated, "Report already escalated");
+
+        report.votes += 1; // Increment votes
+        require(bscamToken.transferFrom(msg.sender, address(this), 1 * (10 ** 18)), "Token transfer failed");
+
+        // Escalate if votes exceed threshold
+        if (report.votes >= 5) {
+            report.escalated = true;
+            escalatedReports[reportIndex] = true;
+        }
+
+        emit TokenVoted(msg.sender, _tokenAddress, 1 * (10 ** 18));
+    }
+
+    // ==============================
+    // Blacklist and Whitelist
+    // ==============================
+
+    function blacklistToken(address _tokenAddress) external onlyAdmin {
+        require(!blacklistedTokens[_tokenAddress], "Token already blacklisted");
+        blacklistedTokens[_tokenAddress] = true;
+        emit TokenBlacklisted(_tokenAddress);
+    }
+
+    function whitelistToken(address _tokenAddress) external onlyAdmin {
+        require(!whitelistedTokens[_tokenAddress], "Token already whitelisted");
+        whitelistedTokens[_tokenAddress] = true;
+        emit TokenWhitelisted(_tokenAddress);
+    }
+
+    // ==============================
+    // Insurance Pool
     // ==============================
 
     function contributeToInsurancePool(uint256 amount) external {
@@ -95,72 +157,17 @@ contract BaseScamRegistry {
         emit FundsClaimedFromInsurancePool(to, amount);
     }
 
-    function dynamicContribution(uint256 fee) internal {
-        uint256 contribution = (fee * 10) / 100; // 10% contribution to the insurance pool
-        insurancePool += contribution;
-        emit FundsAddedToInsurancePool(msg.sender, contribution);
-    }
-
-    // ==============================
-    // Voting System
-    // ==============================
-
-    function weightedVote(address _tokenAddress, uint256 reportIndex, bool voteFor) external {
-        require(bscamToken.balanceOf(msg.sender) >= 1 * (10 ** 18), "Insufficient BSCAM tokens");
-        require(reputation[msg.sender] >= 0, "Reputation too low to vote");
-
-        uint256 weight = reputation[msg.sender] > 10 ? 2 : 1; // Weight votes by reputation
-        votesInPeriod[msg.sender] += weight;
-
-        // Transfer tokens to the insurance pool
-        require(bscamToken.transferFrom(msg.sender, address(this), 1 * (10 ** 18)), "Token transfer failed");
-        insurancePool += 1 * (10 ** 18);
-
-        emit TokenVoted(msg.sender, _tokenAddress, 1 * (10 ** 18));
-    }
-
-    // ==============================
-    // Referrals and Rewards
-    // ==============================
-
-    function setReferral(address referrer) external {
-        require(referrals[msg.sender] == address(0), "Referral already set");
-        require(referrer != msg.sender, "Cannot refer yourself");
-        referrals[msg.sender] = referrer;
-    }
-
-    function rewardReferral(address referee) external onlyAdmin {
-        address referrer = referrals[referee];
-        require(referrer != address(0), "No referrer for this address");
-
-        // Reward the referrer
-        require(bscamToken.mint(referrer, referralReward), "Minting failed");
-        emit ReferralRewarded(referrer, referee, referralReward);
-    }
-
     // ==============================
     // Premium Access via NFTs
     // ==============================
 
     function mintPremiumNFT(address user, string calldata nftURI) external onlyAdmin {
-        // Placeholder logic: Integrate with an NFT minting contract
+        // Placeholder logic for NFT minting
         emit NFTPremiumAccessMinted(user, nftURI);
     }
 
     // ==============================
-    // Historical Data Dashboard
-    // ==============================
-
-    function getTokenMetrics(address _tokenAddress) external view returns (uint256, uint256, uint256) {
-        return (
-            tokenDetails[_tokenAddress].fundsRaised,
-            tokenDetails[_tokenAddress].milestoneProgress,
-            riskScores[_tokenAddress]
-        );
-    }
-
-    // ==============================
-    // Multisig Admin Controls
+    // Admin Functions
     // ==============================
 
     modifier onlyAdmin() {
@@ -168,8 +175,7 @@ contract BaseScamRegistry {
         _;
     }
 
-    function addAdmin(address newAdmin) external onlyAdmin {
-        admin = newAdmin;
-        emit AdminAction(msg.sender, "Add Admin", block.timestamp);
+    function updateReferralReward(uint256 newReward) external onlyAdmin {
+        referralReward = newReward;
     }
 }
