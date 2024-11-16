@@ -1,4 +1,5 @@
-
+The readme for the Security Token is in the works. The smartcontract and token info is located
+in the folder labeled *onchain
 
 ## **Overview**
 
