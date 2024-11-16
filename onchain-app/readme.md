@@ -1,15 +1,8 @@
-
-    
-  ____                 ____                      
- | __ )  __ _ ___  ___/ ___|  ___ __ _ _ __ ___  
+   ____                 ____                      
+  | __ )  __ _ ___  ___/ ___|  ___ __ _ _ __ ___  
  |  _ \ / _` / __|/ _ \___ \ / __/ _` | '_ ` _ \ 
- | |_) | (_| \__ \  __/___) | (_| (_| | | | | | |
- |____/ \__,_|___/\___|____/ \___\__,_|_| |_| |_|
-
-                                                                                                                               
-
----
-
+| |_) | (_| \__ \  __/___) | (_| (_| | | | | | |
+|____/ \__,_|___/\___|____/ \___\__,_|_| |_| |_|                                                                                                                
 ### **BaseScamRegistry: A Community-Driven Scam Identification Platform**
 
 The **BaseScamRegistry** is an innovative, decentralized platform built to protect users from malicious smart contracts and tokens. By leveraging the power of blockchain, BaseScamRegistry allows users to:
