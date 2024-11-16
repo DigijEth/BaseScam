@@ -1,179 +1,249 @@
+To support our efforts, donate to digij.eth or digij.base.eth
 
-# BaseScamRegistry
-
-**BaseScamRegistry** is a decentralized registry for tracking, reporting, and evaluating blockchain projects, tokens, and smart contracts on Basechain. This contract allows users to report suspicious tokens, submit reviews, verify ownership, and access additional features through the use of `BSCAM` tokens and USDC.
-
-## Features
-
-### Core Enhancements
-1. **Audit and Certification**:
-   - Token owners can upload audit certificates (e.g., a document link or hash) to demonstrate project security and compliance.
-
-2. **Scam Detection**:
-   - Dynamic thresholds for escalating suspicious reports.
-   - Reports marked as "escalated" can be prioritized for review.
-
-3. **Cross-Chain Compatibility**:
-   - Supports tokens and projects from Basechain and other blockchains.
-   - Allows classification of contracts into types like ERC-20, ERC-721, etc.
-
-4. **Dynamic Escalation Rules**:
-   - Automatically adjusts the escalation threshold based on the number of active reports to ensure scalability.
+If you would like to join our team, please let us know!
 
 ---
 
-### User Incentives and Engagement
-1. **Token Gating for Features**:
-   - Users must hold or burn `BSCAM` tokens to perform certain actions, such as submitting reports or reviews.
+# **BaseScamRegistry**
 
-2. **Incentivized Reviews**:
-   - Community members can submit detailed reviews of projects.
-   - Reviews can be upvoted or downvoted by others.
-
-3. **Subscription-Based Premium Features**:
-   - Users can pay $9.99 in USDC to unlock premium features, including:
-     - Early access to flagged reports.
-     - Advanced filtering and analytics.
+**BaseScamRegistry** is an on-chain registry designed to report, evaluate, and manage smart contracts, enabling users to flag scams and share reviews. This platform fosters transparency in blockchain ecosystems, combining user-driven reporting with dynamic risk analysis and incentivized community engagement.
 
 ---
 
-## Contract Structure
+## **Table of Contents**
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Technical Details](#technical-details)
+4. [Smart Contract Architecture](#smart-contract-architecture)
+5. [Usage Guide](#usage-guide)
+6. [Installation and Deployment](#installation-and-deployment)
+7. [Future Enhancements](#future-enhancements)
+8. [License](#license)
 
-### Main Components
-1. **Reports**:
-   - Users can report suspicious tokens by burning `BSCAM` tokens.
-   - Reports include:
-     - Reporter address
-     - Reason for the report
-     - Timestamp
-     - Owner response (optional)
-     - Escalation status
+---
+
+## **Overview**
+
+The **BaseScamRegistry** platform aims to:
+- Allow users to report suspicious smart contracts.
+- Provide a decentralized review system for token and project evaluations.
+- Incentivize users with token-based engagement.
+- Offer token owners tools for transparency, such as audit certificates and project details.
+- Dynamically escalate reports based on community votes and activity.
+
+---
+
+## **Features**
+
+### **Core Features**
+1. **Reporting and Voting**:
+   - Report tokens by burning `BSCAM` tokens.
+   - Vote on reports to escalate suspicious tokens for review.
 
 2. **Token Details**:
-   - Verified token owners can provide:
-     - Contact information
-     - A link to their Web3 page
-     - An audit certificate (e.g., link or IPFS hash)
-     - Contract type (e.g., Token, NFT)
+   - Verified token owners can add:
+     - Contact information.
+     - Links to Web3 pages.
+     - Audit certificates (e.g., IPFS hash).
+     - Contract type (e.g., ERC-20, ERC-721).
 
 3. **Reviews**:
-   - Users can submit reviews for tokens and vote on existing reviews.
-   - Reviews include:
-     - Reviewer address
-     - Review content
-     - Upvote and downvote counts
+   - Submit and vote on token reviews.
+   - Upvoted incentivized reviews become visible to the community.
 
 4. **Dynamic Escalation**:
-   - Automatically adjusts the escalation threshold based on the number of active reports:
-     - 0–50 active reports: Escalation threshold = 10 votes.
-     - 51–100 active reports: Escalation threshold = 15 votes.
-     - 100+ active reports: Escalation threshold = 20 votes.
+   - Adjusts report escalation thresholds based on the number of active reports.
 
 5. **Premium Access**:
-   - Users can purchase 30 days of premium access by paying $9.99 in USDC.
-   - Premium features include advanced analytics and early access to flagged reports.
+   - Unlock premium features (e.g., early access to reports) for $9.99 in USDC.
+
+6. **Cross-Chain Compatibility**:
+   - Supports tokens and projects across Basechain and other blockchains.
+
+7. **Incentivized Engagement**:
+   - Users earn rewards for submitting high-quality reviews and participating in escalated reports.
+
+8. **Insurance Pool**:
+   - Funded by burned `BSCAM` tokens and direct USDC contributions.
+   - Reimburses victims of scams upon admin approval.
 
 ---
 
-## Token Integration
+## **Technical Details**
 
+### **Token Integration**
 1. **BSCAM Token**:
-   - Users must hold or burn `BSCAM` tokens to:
-     - Submit reports
-     - Add reviews
-     - Vote on reviews
-   - `BSCAM` tokens can be purchased in batches of 5,000 for $5.99 in USDC.
+   - Required to:
+     - Submit reports.
+     - Vote on reports and reviews.
+     - Add incentivized reviews.
+   - Can be purchased in batches of 5,000 for $5.99 in USDC.
 
 2. **USDC**:
-   - USDC is used for purchasing:
-     - `BSCAM` tokens
-     - Premium subscriptions
+   - Used for:
+     - Purchasing `BSCAM` tokens.
+     - Paying for premium subscriptions.
+
+### **Dynamic Escalation Thresholds**
+- Thresholds adjust based on active reports:
+  - 0–50 reports: 10 votes.
+  - 51–100 reports: 15 votes.
+  - 100+ reports: 20 votes.
 
 ---
 
-## Smart Contract Functions
+## **Smart Contract Architecture**
 
-### Core Functions
-- **`reportToken(address _tokenAddress, string calldata _reason)`**:
-  - Submit a report for a suspicious token by burning `BSCAM` tokens.
-- **`verifyTokenOwnership(address _tokenAddress, string calldata _contactInfo, string calldata _web3Page, string calldata _contractType, string calldata _auditCertificate)`**:
-  - Token owners can verify their ownership and provide audit details.
-- **`escalateReport(address _tokenAddress, uint256 _reportIndex)`**:
-  - Mark a report as "escalated" if it meets specific criteria.
+### **Core Components**
+1. **Reports**:
+   - Tracks reports submitted by users.
+   - Includes:
+     - Reporter address.
+     - Reason for the report.
+     - Timestamp.
+     - Escalation status.
 
-### Review Functions
-- **`addReview(address _tokenAddress, string calldata _content)`**:
-  - Submit a review for a token by burning `BSCAM` tokens.
-- **`voteReview(address _tokenAddress, uint256 _reviewIndex, bool upvote)`**:
-  - Upvote or downvote a submitted review.
+2. **Token Details**:
+   - Allows token owners to add:
+     - Contact information.
+     - Web3 links.
+     - Audit certificates.
+     - Contract type.
 
-### Premium Features
-- **`purchaseSubscription()`**:
-  - Pay $9.99 in USDC to unlock premium access for 30 days.
-- **`hasPremiumAccess(address _user)`**:
-  - Check if a user has an active premium subscription.
+3. **Reviews**:
+   - Allows users to submit and vote on reviews.
+   - Stores:
+     - Reviewer address.
+     - Review content.
+     - Upvotes and downvotes.
 
-### Utility Functions
-- **`updateEscalationThreshold()`**:
-  - Dynamically adjust the escalation threshold based on active reports.
-- **`hasPremiumAccess(address _user)`**:
-  - Check if a user has an active premium subscription.
+4. **Insurance Pool**:
+   - Funded by:
+     - Burned `BSCAM` tokens.
+     - Direct USDC contributions.
 
----
+5. **Premium Subscriptions**:
+   - Users can pay $9.99 in USDC for 30 days of premium features.
 
-## Deployment Instructions
-
-### Prerequisites
-- Deploy the **BSCAMToken** contract first.
-- Deploy the **BaseScamRegistry** contract, passing the deployed `BSCAMToken` and Basechain `USDC` contract addresses to the constructor.
-
-### Environment Setup
-1. Configure your wallet and deployment environment for Basechain.
-2. Use a development framework like **Hardhat** or **Truffle** for contract compilation and deployment.
-
----
-
-## Example Usage
-
-### 1. Reporting a Token
-- Burn `BSCAM` tokens and submit a report for a suspicious token:
+### **Data Structures**
+- **Report**:
   ```solidity
-  reportToken("0xTokenAddress", "Suspicious behavior detected.");
+  struct Report {
+      address reporter;
+      string reason;
+      uint256 timestamp;
+      string ownerResponse;
+      bool escalated;
+      uint256 votes;
+  }
   ```
 
-### 2. Verifying Token Ownership
-- Provide contact information and an audit certificate:
+- **TokenDetails**:
   ```solidity
-  verifyTokenOwnership(
-      "0xTokenAddress",
-      "contact@tokenproject.com",
-      "https://web3page.tokenproject.com",
-      "Token",
-      "https://audit.certificates.com/tokenproject"
-  );
+  struct TokenDetails {
+      string contactInfo;
+      string web3Page;
+      string auditCertificate;
+      string contractType;
+  }
   ```
 
-### 3. Adding a Review
-- Submit a review by burning `BSCAM` tokens:
+- **Review**:
   ```solidity
-  addReview("0xTokenAddress", "Great project with a solid team.");
-  ```
-
-### 4. Purchasing Premium Access
-- Unlock premium features by paying $9.99 in USDC:
-  ```solidity
-  purchaseSubscription();
+  struct Review {
+      address reviewer;
+      string content;
+      uint256 upvotes;
+      uint256 downvotes;
+  }
   ```
 
 ---
 
-## Future Improvements
-- **Crowdfunding for Recovery**: Allow users to fund recovery efforts for escalated cases.
-- **Integration with Machine Learning**: Use AI-based scam detection for automated risk assessments.
-- **Advanced Analytics**: Include transaction frequency, holder distribution, and price trends for registered tokens.
+## **Usage Guide**
+
+### **For Users**
+1. **Submit a Report**:
+   - Use `submitReport(address tokenAddress, string calldata reason)` to flag a suspicious token.
+   - Requires `1 BSCAM` token.
+
+2. **Vote on a Report**:
+   - Use `voteOnReport(address tokenAddress, uint256 reportIndex)` to escalate a report.
+   - Requires `1 BSCAM` token per vote.
+
+3. **Submit a Review**:
+   - Use `submitReview(address tokenAddress, string calldata content)` to review a token.
+   - Requires `2 BSCAM` tokens.
+
+4. **Purchase Premium**:
+   - Use `purchasePremium()` to unlock premium features for $9.99 in USDC.
+
+5. **Purchase BSCAM Tokens**:
+   - Use `purchaseTokens(uint256 amount)` to buy `BSCAM` tokens in batches of 5,000 for $5.99 in USDC.
 
 ---
 
-## License
+### **For Token Owners**
+1. **Add Token Details**:
+   - Use `updateTokenDetails(address tokenAddress, ...)` to:
+     - Add contact information.
+     - Link an audit certificate.
+     - Specify contract type (e.g., ERC-20, ERC-721).
 
-This project is licensed under the **GNU General Public License v3.0 (GNU-3)**. See the [LICENSE](LICENSE) file for details.
+---
+
+## **Installation and Deployment**
+
+### **Prerequisites**
+- **Solidity**: Version 0.8.x.
+- **Node.js**: For Hardhat or Truffle setup.
+- **Basechain Wallet**: For deployment and interaction.
+
+### **Deployment Steps**
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-repo/BaseScamRegistry.git
+   cd BaseScamRegistry
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Compile the contracts:
+   ```bash
+   npx hardhat compile
+   ```
+
+4. Deploy to Basechain:
+   ```bash
+   npx hardhat run scripts/deploy.js --network basechain
+   ```
+
+---
+
+## **Future Enhancements**
+
+1. **AI-Powered Scam Detection**:
+   - Integrate machine learning to flag suspicious tokens automatically.
+
+2. **Global Blacklist Sharing**:
+   - Develop an API for third-party platforms to access blacklisted tokens.
+
+3. **Cross-Chain Expansion**:
+   - Add support for Ethereum, Binance Smart Chain, and Polygon.
+
+4. **Anonymous Reporting**:
+   - Use zero-knowledge proofs to protect whistleblower identities.
+
+5. **Revenue Redistribution**:
+   - Share platform earnings with active contributors.
+
+---
+
+## **License**
+
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See the [LICENSE](LICENSE) file for details.
+
+---
