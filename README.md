@@ -1,12 +1,8 @@
-The readme for the Security Token is in 
-the labeled /onchain-app/ 
+The on-chain registry contract and detailed instructions are in the
+/onchain-app/ folder. The contract is the main project. This web app,
+server and dapp are just PoC uses that go with the Bscam
+ecosystem.
 
-The main function comes from the Contract and Token 
-interactions. While the app provides information
-based on scans, the tokens let users report and make
-comments about tokens, pairs, etc.
-
-Token price should remain low or even on a infinite tap
 
 ## **Overview**
 
