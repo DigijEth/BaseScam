@@ -1,7 +1,4 @@
-The on-chain registry contract and detailed instructions are in the
-/onchain-app/ folder. The contract is the main project. This web app,
-server and dapp are just PoC uses that go with the Bscam
-ecosystem.
+The base project is located in /onchain-app/ This is where the registry contract and detailed instructions The contract is the located. The other files are now obsolete. This will be reflected in the next major update.
 
 
 ## **Overview**
